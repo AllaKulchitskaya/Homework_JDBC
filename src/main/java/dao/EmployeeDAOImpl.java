@@ -1,122 +1,57 @@
 package dao;
 
-import jdbc.ConnectionManager;
-import model.City;
-import model.Employee;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import configuration.HibernateSessionFactoryUtil;
+import model.Employee;
+import org.hibernate.Session;
+import org.hibernate.Transaction;
+
+
 import java.util.ArrayList;
 import java.util.List;
 
 public class EmployeeDAOImpl implements EmployeeDAO {
 
-    public EmployeeDAOImpl(Connection connection) {
-    }
-
     @Override
     public void create(Employee employee) {
-        try(Connection connection = ConnectionManager.getConnection();
-            PreparedStatement statement = connection.prepareStatement(
-                "INSERT INTO employee (id, first_name, last_name, gender, age, city_id) " +
-                        "VALUES ((?), (?), (?), (?), (?), (?))")) {
-
-            statement.setInt(1, employee.getId());
-            statement.setString(2, employee.getFirstName());
-            statement.setString(3, employee.getLastName());
-            statement.setString(4, employee.getGender());
-            statement.setInt(5, employee.getAge());
-            statement.setInt(6, employee.getCity().getCityId());
-
-            statement.executeUpdate();
-
-        } catch (SQLException e) {
-            e.printStackTrace();
+        try(Session session = HibernateSessionFactoryUtil.getSessionFactory().openSession()) {
+            Transaction transaction = session.beginTransaction();
+            session.save(employee);
+            transaction.commit();
         }
     }
 
     @Override
     public Employee getById(int id) {
-        Employee employee = new Employee();
-        try (Connection connection = ConnectionManager.getConnection();
-             PreparedStatement statement = connection.prepareStatement(
-                "SELECT * FROM employee INNER JOIN city ON employee.city_id = city.city_id AND id=(?)")) {
-
-            statement.setInt(1, id);
-
-            ResultSet resultSet = statement.executeQuery();
-
-            while(resultSet.next()) {
-                employee.setId(Integer.parseInt(resultSet.getString("id")));
-                employee.setFirstName(resultSet.getString("first_name"));
-                employee.setLastName(resultSet.getString("last_name"));
-                employee.setGender(resultSet.getString("gender"));
-                employee.setAge(Integer.parseInt(resultSet.getString("age")));
-                employee.setCity(new City(resultSet.getInt("city_id"),
-                        resultSet.getString("city_name")));
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return employee;
+        return HibernateSessionFactoryUtil.getSessionFactory().openSession().get(Employee.class, id);
     }
 
     @Override
     public List<Employee> getAll() {
-
-        List<Employee> employees = new ArrayList<>();
-
-        try(Connection connection = ConnectionManager.getConnection();
-            PreparedStatement statement = connection.prepareStatement(
-                "SELECT * FROM employee INNER JOIN city ON employee.city_id = city.city_id")) {
-
-            ResultSet resultSet = statement.executeQuery();
-            while (resultSet.next()) {
-                int id = Integer.parseInt(resultSet.getString("id"));
-                String firstName = resultSet.getString("first_name");
-                String lastName = resultSet.getString("last_name");
-                String gender = resultSet.getString("gender");
-                int age = Integer.parseInt(resultSet.getString("age"));
-                City city = new City(resultSet.getInt("city_id"),
-                        resultSet.getString("city_name"));
-
-                employees.add(new Employee(id, firstName, lastName, gender, age, city));
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
+        List<Employee> employees;
+        try (Session session = HibernateSessionFactoryUtil.getSessionFactory().openSession()) {
+            Transaction transaction = session.beginTransaction();
+            employees = new ArrayList<>(session.createQuery("FROM Employee", Employee.class).list());
+            transaction.commit();
         }
-
         return employees;
     }
 
     @Override
-    public void updateById(int id, int age) {
-        try(Connection connection = ConnectionManager.getConnection();
-            PreparedStatement statement = connection.prepareStatement(
-                "UPDATE employee SET age=(?) WHERE id=(?)")) {
-
-            statement.setInt(1, age);
-            statement.setInt(2, id);
-
-            statement.executeUpdate();
-        } catch (SQLException e) {
-            e.printStackTrace();
+    public void update(Employee employee) {
+        try(Session session = HibernateSessionFactoryUtil.getSessionFactory().openSession()){
+            Transaction transaction = session.beginTransaction();
+            session.update(employee);
+            transaction.commit();
         }
     }
 
     @Override
-    public void deleteById(int id) {
-        try(Connection connection = ConnectionManager.getConnection();
-            PreparedStatement statement = connection.prepareStatement(
-                "DELETE FROM employee WHERE id=(?)")) {
-
-            statement.setInt(1, id);
-            statement.executeUpdate();
-
-        } catch (SQLException e) {
-            e.printStackTrace();
+    public void delete(Employee employee) {
+        try(Session session = HibernateSessionFactoryUtil.getSessionFactory().openSession()) {
+            Transaction transaction = session.beginTransaction();
+            session.delete(employee);
+            transaction.commit();
         }
     }
 }
