@@ -14,8 +14,6 @@ import java.util.List;
 
 public class EmployeeDAOImpl implements EmployeeDAO {
 
-    private final CityDAO cityDAO = new CityDAOImpl();
-
     @Override
     public void create(Employee employee) {
         try(Session session = HibernateSessionFactoryUtil.getSessionFactory().openSession()) {
