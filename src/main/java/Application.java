@@ -1,27 +1,40 @@
+import dao.CityDAO;
 import dao.EmployeeDAO;
-import dao.EmployeeDAOImpl;
-import model.Employee;
+import dao.impl.CityDAOImpl;
+import dao.impl.EmployeeDAOImpl;
+import entity.City;
+import entity.Employee;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class Application {
 
     public static void main(String[] args) {
         EmployeeDAO employeeDAO = new EmployeeDAOImpl();
+        CityDAO cityDAO = new CityDAOImpl();
 
-        Employee employee = new Employee("Kirill", "Sorokin", "male", 26, 3);
-        employeeDAO.create(employee);
+        City city = new City("Krasnodar");
 
-        System.out.println(employeeDAO.getById(6));
+        Employee employee1 = new Employee("Tatyana", "Afanaseva", "female", 48, city);
+        Employee employee2 = new Employee("Ivan", "Yastrebov", "male", 31, city);
+        List<Employee> employees = new ArrayList<>();
+        employees.add(employee1);
+        employees.add(employee2);
 
-        List<Employee> employeesList = employeeDAO.getAll();
-        for (Employee employee1 : employeesList) {
-            System.out.println(employee1);
-        }
+        city.setEmployees(employees);
 
-        Employee employee2 = new Employee(7, "Ivan", "Yastrebov", "male", 31, 4);
-        employeeDAO.update(employee2);
+        cityDAO.createCity(city);
 
-        employeeDAO.delete(employee2);
+        employeeDAO.getAll().forEach(System.out::println);
+
+        cityDAO.deleteCity(city);
+
+        employeeDAO.getAll().forEach(System.out::println);
+
+        City city1 = new City(6, "Sochi");
+        cityDAO.updateCity(city1);
+
+        employeeDAO.getAll().forEach(System.out::println);
     }
 }
