@@ -22,7 +22,9 @@ public class CityDAOImpl implements CityDAO {
 
     @Override
     public City getCityById(int cityId) {
-        return HibernateSessionFactoryUtil.getSessionFactory().openSession().get(City.class, cityId);
+        try(Session session = HibernateSessionFactoryUtil.getSessionFactory().openSession()) {
+            return session.get(City.class, cityId);
+        }
     }
 
     @Override
